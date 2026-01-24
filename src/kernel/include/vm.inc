@@ -5,14 +5,22 @@
 # VPN[0] [20:12] index for level 0 page table
 # Page Offset [11:0] offset into the 4k physical page
 
-.set PTE_V, 0
-.set PTE_R, 1
-.set PTE_W, 2
-.set PTE_X, 3
-.set PTE_U, 4
-.set PTE_G, 5
-.set PTE_A, 6
-.set PTE_D, 7
+.set PTE_V, 0x01
+.set PTE_R, 0x02
+.set PTE_W, 0x04
+.set PTE_X, 0x08
+.set PTE_U, 0x10
+.set PTE_G, 0x20
+.set PTE_A, 0x40
+.set PTE_D, 0x80
+.set PTE_V_BIT, 0
+.set PTE_R_BIT, 1
+.set PTE_W_BIT, 2
+.set PTE_X_BIT, 3
+.set PTE_U_BIT, 4
+.set PTE_G_BIT, 5
+.set PTE_A_BIT, 6
+.set PTE_D_BIT, 7
 
 # convert physical address to page table entry and store result in destination register
 .macro pa2pte destreg, pa

@@ -16,7 +16,7 @@ _walk_loop:
     pop t1 # restore registers
     add t2, t2, a0 # switch page table to that index
     ld t1, 0(t2) # load page table entry from page table
-    btsti t3, t1, PTE_V # is page table entry available (exists)?
+    btsti t3, t1, PTE_V_BIT # is page table entry available (exists)?
     beqz t3, _walk_alloc # if not, try to allocate
     pte2pa t1, t1 # convert page table entry to physical address of next page table entry
     mv a0, t1 # switch page table to next page table entry
@@ -37,7 +37,7 @@ _walk_alloc:
     push t0 # save affected registers
     push t3
     clr t0
-    bseti t0, PTE_V # mark page table entry as available (exist)
+    bseti t0, PTE_V_BIT # mark page table entry as available (exist)
     pa2pte t3, a0 # convert physical address of page table to page table entry
     or t0, t3, t0 # append converted address to page table entry
     sd t0, 0(t1) # store prebaked page table entry to page table entry address
@@ -56,7 +56,7 @@ walk_addr: # a0 = pgtbl (returns pa here), a1 = va; modified: t0, t1, t2, t3
     clr a2
     callr walk # get last page table entry address from page table and virtual address
     ld a0, 0(a0) # load page table entry from page table entry address
-    pte2pa a0, a0 # convert last page table entry inro physical address
+    pte2pa a0, a0 # convert last page table entry into physical address
     li t0, PAGE_SIZE
     and a1, a1, t0 # get first 12 bits of virtual address (offset to physical address)
     or a0, a0, a1 # combine physical address and offset together
@@ -64,7 +64,49 @@ walk_addr: # a0 = pgtbl (returns pa here), a1 = va; modified: t0, t1, t2, t3
     pop a1
     ret
 
-.section .data
+# map pages to virtual address
+map_pages: # a0 = pgtbl, a1 = pa, a2 = va, a3 = prot, a4 = n; modified: t0, t1, t2, t3
+    push a1 # save original argument registers
+    push a2
+    push a4
+    pgalignup a1, a1 # page align physical address
+    pgalignup a2, a2 # page align virtual address
+_map_pages_loop:
+    push a0 # save affected registers
+    push a1
+    push a2
+    mv a1, a2
+    li a2, 1 # allocate page table entry while walking
+    callr walk # get last page table entry from virtual address
+    mv t0, a0
+    pop a2 # restore registers
+    pop a1
+    pop a0
+    pa2pte t1, a1 # convert physical address into page table entry
+    or t1, t1, a3 # apply protection bits
+    sd t1, 0(t0) # store prepared page table entry to page table entry address
+    li t1, PAGE_SIZE
+    add a1, a1, t1 # switch to next page
+    add a2, a2, t1
+    dec a4 # decrement counter
+    bnez a4, _map_pages_loop # loop until last page
+_map_pages_end:
+    pop a4 # restore original argument registers
+    pop a2
+    pop a1
+    ret
+
+# map pages simple
+map_pagess: # a0 = pgtbl, a1 = pa, a2 = va, a3 = prot, a4 = size; modified: t0, t1, t2, t3
+    push a4 # save original argument registers
+    li t0, PAGE_SIZE
+    pgalignup a4, a4 # page align size
+    divu a4, a4, t0 # divide size by page size (convert to pages)
+    callr map_pages # call verbose map pages
+    pop a4 # restore original argument registers
+
+
+.section .rodata
 
 nonexistent_page_msg:
     .asciz "walk: page does not exist!\n"
