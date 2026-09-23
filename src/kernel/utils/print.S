@@ -1,11 +1,20 @@
 .include "riscv.inc"
 
 .section .text
+.global putc
 .global printraw
 .global panic
 
+# print one character
+putc: # a0 = character to print; modified: t0
+    svra # save return address
+    call uart_write # write character to terminal through UART driver
+    ldra # restore return address
+    ret
+
 # print raw string
 printraw: # a0 = string address; modified: t0
+    svra # save return address
     push a0 # save original argument registers
 _printraw_loop:
     lb t0, 0(a0) # load character from string
@@ -13,15 +22,16 @@ _printraw_loop:
     push a0 # save affected registers
     push t0
     mv a0, t0
-    callr uart_write # write character to terminal
+    call putc # write character to terminal
     pop t0 # restore registers
     pop a0
     bnez t0, _printraw_loop # loop until terminal character
 _printraw_end:
     pop a0 # restore original argument registers
+    ldra # restore return address
     ret
 
 # panic and halt system
 panic: # a0 = panic message; modified: t0
-    callr printraw
+    call printraw
     j .

@@ -1,89 +1,110 @@
-.set PAGE_SIZE, 4096 # risc-v typical page size is 4k
+# Definitions
 
-# push register
+.set PAGE_SIZE, 4096 # RISC-V typical page size is 4k
+.set SCAUSE_INT_TIMER, 0x05 # RISC-V timer interrupt number is 5
+.set SCAUSE_EXC_USER_ECALL, 0x08 # RISC-V user ecall number is 8
+.set SCAUSE_EXC_SUPERVISOR_ECALL, 0x09 # RISC-V supervisor ecall number is 9
+.set SCAUSE_EXC_STORE_FAULT, 0x0F # RISC-V Store/AMO access fault number is 15
+
+# Functions
+
+# Push register
 .macro push reg
     addi sp, sp, -8
     sd \reg, 0(sp)
 .endm
 
-# pop register
+# Pop register
 .macro pop reg
     ld \reg, 0(sp)
-    addi sp, sp,8
+    addi sp, sp, 8
 .endm
 
-# save return address
+# Save return address
 .macro svra
     push ra
 .endm
 
-# load return address
+# Load return address
 .macro ldra
     pop ra
 .endm
 
-# recursive call
+# Recursive call
 .macro callr addr
     svra
     call \addr
     ldra
 .endm
 
-# increment register by 1
+# Increment register by 1
 .macro inc reg
     addi \reg, \reg, 1
 .endm
 
-# decrement register by 1
+# Decrement register by 1
 .macro dec reg
     addi \reg, \reg, -1
 .endm
 
-# increment register by 4 (typically used by adjusting program counter to next instruction)
+# Adjust register to next instruction (typically used for adjusting program counter to next instruction)
 .macro nextinst reg
-    addi \reg, \reg, 4
+    push t5
+    push t6
+    lhu t5, 0(\reg) # load instruction
+    li t6, 3
+    and t5, t5, t6 # filter instruction size bits
+    beq t5, t6, .L_is_32bit # determine instruction size (11 (3) = 32 bit, else 16 bit)
+.L_is_16bit: # it is an compressed instruction
+    addi \reg, \reg, 2 # adjust program counter by 2
+    j .L_nextinst_end
+.L_is_32bit: # it is an regular instruction
+    addi \reg, \reg, 4 # adjust program counter by 4
+.L_nextinst_end:
+    pop t6
+    pop t5
 .endm
 
-# swap values between registers reg1 and reg2
+# Swap values between registers reg1 and reg2
 .macro swp reg1, reg2
     push \reg1
     mv \reg1, \reg2
     pop \reg2
 .endm
 
-# test bit n of register reg and place result in destination register destreg (immediate)
+# Test bit n of register reg and place result in destination register destreg (immediate)
 .macro btsti destreg, reg, n
-    slli \destreg, \reg, \n
+    srli \destreg, \reg, \n
     andi \destreg, \destreg, 1
 .endm
 
-# test bit located in register nreg of register reg and place result in destination register destreg
+# Test bit located in register nreg of register reg and place result in destination register destreg
 .macro btst destreg, reg, nreg
-    sll \destreg, \reg, \nreg
+    srl \destreg, \reg, \nreg
     andi \destreg, \destreg, 1
 .endm
 
-# set bit n of register reg (immediate)
+# Set bit n of register reg (immediate)
 .macro bseti reg, n
     push t6
     li t6, 1
-    srli t6, t6, \n
+    slli t6, t6, \n
     or \reg, \reg, t6
     pop t6
 .endm
 
-# set bit located in register nreg of register reg 
+# Set bit located in register nreg of register reg 
 .macro bset reg, nreg
     push t6
     li t6, 1
-    srl t6, t6, \nreg
+    sll t6, t6, \nreg
     or \reg, \reg, t6
     pop t6
 .endm
 
-# clear bit n of register reg (immediate)
+# Clear bit n of register reg (immediate)
 .macro bclri reg, n
-    push t5
+    push t6
     li t6, 1
     srli t6, t6, \n
     push \reg
@@ -94,9 +115,9 @@
     pop t6
 .endm
 
-# clear bit n located in register nreg of register reg
+# Clear bit n located in register nreg of register reg
 .macro bclr reg, nreg
-    push t5
+    push t6
     li t6, 1
     srl t6, t6, \nreg
     push \reg
@@ -107,26 +128,26 @@
     pop t6
 .endm
 
-# clear whole register reg
+# Clear whole register reg
 .macro clr reg
     xor \reg, \reg, \reg
 .endm
 
-# page align address
-.macro pgalign addr
+# Page align address
+.macro pgalign reg, addr
     push t6
     li t6, 0xFFFFFFFFFFFFF000
-    and \addr, \addr, t6
+    and \reg, \addr, t6
     pop t6
 .endm
 
-# page align address up
-.macro pgalignup addr
+# Page align address up
+.macro pgalignup reg, addr
     push t6
     li t6, PAGE_SIZE
     addi t6, t6, -1
-    add \addr, \addr, t6
+    add \reg, \addr, t6
     li t6, 0xFFFFFFFFFFFFF000
-    and \addr, \addr, t6
+    and \reg, \reg, t6
     pop t6
 .endm

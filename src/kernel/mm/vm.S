@@ -1,59 +1,59 @@
 .include "riscv.inc"
+.include "memlayout.inc"
 .include "vm.inc"
 
 .section .text
+.global kernel_pagedir
 .global walk
+.global walk_addr
+.global map_pages
+.global map_pagess
+.global vm_init
 
-# walk through page table entries and return last page table entry translated from virtual address
-walk: # a0 = ptbl (returns pte0 here), a1 = va, a2 = alloc; modified: t0, t1, t2, t3
+# Walk through page table entries and return last page table entry translated from virtual address
+walk: # a0 = ptbl, a1 = va, a2 = alloc; modified: t0, t1, t2, t3, a0 (returns pte0 here)
+    svra # save return address
     li t0, 2 # 3 levels of page table (from 2 to 1)
-    li t1, 0 # page table entry address
+    mv t1, a0 # page table address
 _walk_loop:
-    ptn t2, a1, t0 # load page index from virtual address
-    push t1 # save affected registers
-    li t1, 4
-    mul t2, t2, t1 # multiply by size of page table entry size (uint64)
-    pop t1 # restore registers
-    add t2, t2, a0 # switch page table to that index
-    ld t1, 0(t2) # load page table entry from page table
-    btsti t3, t1, PTE_V_BIT # is page table entry available (exists)?
-    beqz t3, _walk_alloc # if not, try to allocate
-    pte2pa t1, t1 # convert page table entry to physical address of next page table entry
-    mv a0, t1 # switch page table to next page table entry
-_walk_loop_continue:
-    dec t0 # go one page level down
-    bgez t0, _walk_loop # loop until page level 1
-_walk_end:
-    ptni t2, a1, 0 # load zero page index from virtual address
-    add t2, t2, a0 # switch page table to that index
-    mv a0, t2 # return level 0 page table entry address
-    ret
+    ptn t2, a1, t0 # extract PPN bits from virtual address
+    li t3, 8
+    mul t3, t2, t3 # obtain index of page table by multiplying PPN by 8 (uint64)
+    add t3, t1, t3 # switch to that address 
+    ld t1, 0(t3) # load PTE from page table index
+    beqz t0, _walk_exit # if reached last page level, extract final physical address and exit
+    btsti t2, t1, PTE_V_BIT # check if PTE exists
+    beqz t2, _walk_alloc # if PTE doesn't exist, allocate it
+    pte2pa t1, t1 # convert PTE to physical address
+_walk_continue:
+    dec t0 # switch to next level of page table
+    j _walk_loop
 _walk_alloc:
-    beqz a2, _walk_error # if alloc flag not set, trip
+    beqz a2, _walk_panic # if allocate flag not set, panic
     push a0 # save affected registers
-    call kalloc # allocate memory for page table entry
-    mv t1, a0 # set page table entry address to allocated address
-    pop a0 # restore registers
-    push t0 # save affected registers
-    push t3
-    clr t0
-    bseti t0, PTE_V_BIT # mark page table entry as available (exist)
-    pa2pte t3, a0 # convert physical address of page table to page table entry
-    or t0, t3, t0 # append converted address to page table entry
-    sd t0, 0(t1) # store prebaked page table entry to page table entry address
+    push t0
+    call kalloc # allocate PTE
+    pa2pte t0, a0 # convert allocated physical address to PTE
+    bseti t0, PTE_V_BIT # mark PTE as existing
+    sd t0, 0(t3) # store PTE at PTE address
+    mv t1, a0 # set page table address to new PTE
     pop t0 # restore registers
-    pop t3
-    j _walk_loop_continue # continue loop
-_walk_error:
+    pop a0
+    j _walk_continue # continue loop
+_walk_panic:
     la a0, nonexistent_page_msg
-    callr panic # walk error, should not return
-    j . # if returned, halt
+    call panic # panic if PTE entry doesn't exist and allocate flag is not set
+_walk_exit:
+    mv a0, t3 # return pte0
+    ldra # restore return address
+    ret
 
-# translate virtual address into physical address
+# Translate virtual address into physical address
 walk_addr: # a0 = pgtbl (returns pa here), a1 = va; modified: t0, t1, t2, t3
+    svra # save return address
     push a1 # save original argument registers
     push a2
-    clr a2
+    clr a2 # do not allocate memory, just walk through page table
     callr walk # get last page table entry address from page table and virtual address
     ld a0, 0(a0) # load page table entry from page table entry address
     pte2pa a0, a0 # convert last page table entry into physical address
@@ -62,10 +62,12 @@ walk_addr: # a0 = pgtbl (returns pa here), a1 = va; modified: t0, t1, t2, t3
     or a0, a0, a1 # combine physical address and offset together
     pop a2 # restore original argument registers
     pop a1
+    ldra # restore return address
     ret
 
-# map pages to virtual address
+# Map pages to virtual address
 map_pages: # a0 = pgtbl, a1 = pa, a2 = va, a3 = prot, a4 = n; modified: t0, t1, t2, t3
+    svra # save return address
     push a1 # save original argument registers
     push a2
     push a4
@@ -77,7 +79,7 @@ _map_pages_loop:
     push a2
     mv a1, a2
     li a2, 1 # allocate page table entry while walking
-    callr walk # get last page table entry from virtual address
+    call walk # get last page table entry from virtual address
     mv t0, a0
     pop a2 # restore registers
     pop a1
@@ -94,17 +96,57 @@ _map_pages_end:
     pop a4 # restore original argument registers
     pop a2
     pop a1
+    ldra # restore return address
     ret
 
-# map pages simple
+# Map pages simple
 map_pagess: # a0 = pgtbl, a1 = pa, a2 = va, a3 = prot, a4 = size; modified: t0, t1, t2, t3
+    svra # save return address
     push a4 # save original argument registers
     li t0, PAGE_SIZE
     pgalignup a4, a4 # page align size
     divu a4, a4, t0 # divide size by page size (convert to pages)
-    callr map_pages # call verbose map pages
+    call map_pages # call verbose map pages
     pop a4 # restore original argument registers
+    ldra # restore return address
+    ret
 
+# Initialize virtual memory
+vm_init: # no arguments; modified: t0, t1, t2, t3
+    svra # save return address
+    push a0 # save original argument registers
+    push a1
+    push a2
+    push a3
+    push a4
+    la a0, kernel_pagedir # kernel page directory will be filled with pte entries
+    li a1, MM_KERN_BASE # start mapping at kernel base address
+    li a2, MM_KERN_BASE # map kernel at same virtual address
+    li a3, PTE_KERNEL_TEXT # default mapping of kernel text
+    li a4, MM_PHYSTOP
+    sub a4, a4, a2 # map whole memory
+    call map_pagess # map pages of kernel
+    li a1, MM_UART_IO # now map UART MMIO
+    li a2, MM_UART_IO # map UART MMIO at same virtual address
+    li a3, PTE_KERNEL_DATA # make it read/write mapping
+    li a4, PAGE_SIZE # map whole page of UART MMIO
+    call map_pagess # map pages of UART MMIO
+    la a0, kernel_pagedir # kernel page directory address
+    mksatp t0, a0, MMU_MODE_SV39 # create formatted SATP register
+    csrw satp, t0 # install formatted SATP register
+    sfence.vma # clear TLB cache
+    pop a4 # restore original argument registers
+    pop a3
+    pop a2
+    pop a1
+    pop a0
+    ldra # restore return address
+    ret
+
+.section .bss
+
+kernel_pagedir:
+    .quad 0x0000000000000000 # kernel page directory address
 
 .section .rodata
 
