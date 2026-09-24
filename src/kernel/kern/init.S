@@ -20,6 +20,8 @@ kmain:
 _kmain_loop:
     la a0, init_completed_msg
     call uart_writestring
+    li a0, 75000
+    call timer_wait
     la a0, user_pagedir
     la a1, _trampoline_start
     mv a2, a1

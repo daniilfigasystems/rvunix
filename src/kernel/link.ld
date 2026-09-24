@@ -39,7 +39,6 @@ SECTIONS
         . += 0x1000;
         . = ALIGN(8);
         *(.bss .bss.*);
-        . = ALIGN(4K);
         PROVIDE(_bss_end = .);
     }
 

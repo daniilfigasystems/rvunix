@@ -54,7 +54,7 @@ walk_addr: # a0 = pgtbl (returns pa here), a1 = va; modified: t0, t1, t2, t3
     push a1 # save original argument registers
     push a2
     clr a2 # do not allocate memory, just walk through page table
-    callr walk # get last page table entry address from page table and virtual address
+    call walk # get last page table entry address from page table and virtual address
     ld a0, 0(a0) # load page table entry from page table entry address
     pte2pa a0, a0 # convert last page table entry into physical address
     li t0, PAGE_SIZE
