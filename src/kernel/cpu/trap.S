@@ -7,11 +7,13 @@
 
 # Initialize traps
 trap_init: # no arguments; modified: t0, t1, stvec
+    svra # save return address
     la t0, trap_vector
     la t1, user_trapframe
     sd t0, 296(t1) # store kernel trap vector address to stackframe
     csrw stvec, t0 # install trap vector in stvec (supervisor trap vector)
-    callr cpu_enable_sirqs # enable supervisor interrupts
+    call cpu_enable_sirqs # enable supervisor interrupts
+    ldra # restore return address
     ret
 
 # Trap vector (kernel mode)
@@ -126,27 +128,8 @@ trap_handler: # a0 = stackframe address; modified: t0, t1, t2, t3
     and t0, t1, t0 # mask interrupt bit
     bnez t0, _trap_handler_interrupt # if interrupt bit set, handle interrupt, else handle exception
 _trap_handler_exception:
-    li t0, SCAUSE_EXC_SUPERVISOR_ECALL
-    beq t0, t1, _trap_handler_secall # if supervisor ecall, handle it (should be handled by machine mode, use supervisor handler for compatibility)
-    li t0, SCAUSE_EXC_STORE_FAULT
-    beq t0, t1, _trap_handler_store_fault # if store fault, handle it
+    mv a1, t0 # transfer exception code as first argument to trap_panic
     call trap_panic # if exception is unhandled, panic
-_trap_handler_secall:
-    la a0, trap_secall_exception_msg
-    call printraw # notify about supervisor system call
-    j _trap_handler_end
-_trap_handler_store_fault:
-    la a0, trap_store_fault_exception_msg
-    call printraw # notify about AMO/Store access fault
-    csrr a0, stval # load store address
-    la a1, itoa_buffer # convert integer to itoa buffer
-    li a2, 16 # hexadecimal base
-    call itoa # convert integer to ASCII string
-    mv a0, a1
-    call printraw # now print store address
-    li a0, '\n'
-    call putc # put newline
-    call cpu_halt # halt processor
 _trap_handler_end:
     ldra # restore return address
     ret
@@ -161,18 +144,27 @@ _trap_handler_timer:
     j _trap_handler_end # return from trap handler
 
 # Trap panic
-trap_panic: # a0 = stackframe address; modified: t0, a0, a1, a2
-    ld a0, 256(a0) # load supervisor cause
-    la a1, itoa_buffer # convert integer to itoa buffer
-    li a2, 16 # hexadecimal base
-    call itoa # convert integer to ASCII string
-    la a0, trap_trip_msg
-    call printraw # print trap trip message
-    mv a0, a1
-    call printraw # now print supervisor cause
+trap_panic: # a0 = stackframe address, a1 = exception code; modified: t0, a0, a1, a2
+    la a0, trap_exception_msgs # load address of trap exception message address table
+    slli t0, a1, 3 # multiply index by 8 (uint64) to get offset to message address
+    add a0, a0, t0 # add offset and address of trap exception message address table
+    ld a0, 0(a0) # load actual address from trap exception message address table
+    beqz a0, _trap_panic_unknown_exc # if trap exception message address is zero, print exception code instead
+    call printraw # notify about panic
+_trap_panic_end:
     li a0, '\n'
     call putc # put newline
     call cpu_halt # halt processor
+_trap_panic_unknown_exc:
+    la a0, trap_trip_msg # load address of trap trip message
+    call printraw # print message
+    mv a0, a1 # transfer exception code to first argument to itoa
+    la a1, itoa_buffer # load address of converting ASCII buffer
+    li a2, 16 # hexadecimal base
+    call itoa # convert exception code to ASCII string
+    mv a0, a1 # transfer ASCII string address to first argument to printraw
+    call printraw # print exception code
+    j _trap_panic_end # jump to end
 
 .section .bss
 
@@ -184,8 +176,26 @@ itoa_buffer:
 trap_trip_msg:
     .asciz "supervisor mode exception: 0x"
 
-trap_secall_exception_msg:
-    .asciz "supervisor system call exception\n"
-
 trap_store_fault_exception_msg:
-    .asciz "Store/AMO access fault, stval=0x"
+    .asciz "Store/AMO access fault"
+
+trap_illegal_instruction_exception_msg:
+    .asciz "Illegal instruction"
+
+trap_exception_msgs:
+    .quad 0x0000000000000000 # instruction address misaligned
+    .quad 0x0000000000000000 # instruction access fault
+    .quad trap_illegal_instruction_exception_msg # illegal instruction
+    .quad 0x0000000000000000 # breakpoint
+    .quad 0x0000000000000000 # load address misaligned
+    .quad 0x0000000000000000 # load access fault
+    .quad 0x0000000000000000 # store/AMO address misaligned
+    .quad trap_store_fault_exception_msg # store/AMO access fault
+    .quad 0x0000000000000000 # ecall from U-mode
+    .quad 0x0000000000000000 # ecall from S-mode
+    .quad 0x0000000000000000 # reserved
+    .quad 0x0000000000000000 # reserved
+    .quad 0x0000000000000000 # instruction page fault
+    .quad 0x0000000000000000 # load page fault
+    .quad 0x0000000000000000 # reserved
+    .quad 0x0000000000000000 # store/AMO page fault

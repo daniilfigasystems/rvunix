@@ -151,10 +151,22 @@ utrap_panic: # a0 = stackframe address, a1 = exception code; modified: t0, a0, a
     slli t0, a1, 3 # multiply index by 8 (uint64) to get offset to message address
     add a0, a0, t0 # add offset and address of trap exception message address table
     ld a0, 0(a0) # load actual address from trap exception message address table
+    beqz a0, _utrap_panic_unknown_exc # if trap exception message address is zero, print exception code instead
     call printraw # notify about panic
+_utrap_panic_end:
     li a0, '\n'
     call putc # put newline
     call cpu_halt # halt processor
+_utrap_panic_unknown_exc:
+    la a0, trap_trip_msg # load address of trap trip message
+    call printraw # print message
+    mv a0, a1 # transfer exception code to first argument to itoa
+    la a1, itoa_buffer # load address of converting ASCII buffer
+    li a2, 16 # hexadecimal base
+    call itoa # convert exception code to ASCII string
+    mv a0, a1 # transfer ASCII string address to first argument to printraw
+    call printraw # print exception code
+    j _utrap_panic_end # jump to end
 
 # Switch to user mode
 user_switch: # a0 = user pgtbl, a1 = user stack, a2 = user pc; modified: t0, t1, t2, t3, t4, a0, a1, a2, a3, a4, a5, a6, a7
@@ -250,7 +262,7 @@ itoa_buffer:
 .section .rodata
 
 trap_trip_msg:
-    .asciz "user mode exception"
+    .asciz "user mode exception: 0x"
 
 trap_uecall_exception_msg:
     .asciz "user system call exception\n"
@@ -262,19 +274,19 @@ trap_illegal_instruction_exception_msg:
     .asciz "Illegal instruction"
 
 trap_exception_msgs:
-    .quad trap_trip_msg # instruction address misaligned
-    .quad trap_trip_msg # instruction access fault
+    .quad 0x0000000000000000 # instruction address misaligned
+    .quad 0x0000000000000000 # instruction access fault
     .quad trap_illegal_instruction_exception_msg # illegal instruction
-    .quad trap_trip_msg # breakpoint
-    .quad trap_trip_msg # load address misaligned
-    .quad trap_trip_msg # load access fault
-    .quad trap_trip_msg # store/AMO address misaligned
+    .quad 0x0000000000000000 # breakpoint
+    .quad 0x0000000000000000 # load address misaligned
+    .quad 0x0000000000000000 # load access fault
+    .quad 0x0000000000000000 # store/AMO address misaligned
     .quad trap_store_fault_exception_msg # store/AMO access fault
-    .quad trap_trip_msg # ecall from U-mode
-    .quad trap_trip_msg # ecall from S-mode
-    .quad trap_trip_msg # reserved
-    .quad trap_trip_msg # reserved
-    .quad trap_trip_msg # instruction page fault
-    .quad trap_trip_msg # load page fault
-    .quad trap_trip_msg # reserved
-    .quad trap_trip_msg # store/AMO page fault
+    .quad 0x0000000000000000 # ecall from U-mode
+    .quad 0x0000000000000000 # ecall from S-mode
+    .quad 0x0000000000000000 # reserved
+    .quad 0x0000000000000000 # reserved
+    .quad 0x0000000000000000 # instruction page fault
+    .quad 0x0000000000000000 # load page fault
+    .quad 0x0000000000000000 # reserved
+    .quad 0x0000000000000000 # store/AMO page fault
