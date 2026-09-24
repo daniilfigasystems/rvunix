@@ -1,11 +1,11 @@
 # rvunix
 ## rvunix is an UNIX-like operating system written in RISC-V assembly
 ## Features
-Sv39 Virtual memory support
-Basic memory allocator
-Userspace and system calls
-RISC-V Timer support **(requires Sstc extension)**
-16550 UART
+Sv39 Virtual memory support<br>
+Basic memory allocator<br>
+Userspace and system calls<br>
+RISC-V Timer support **(requires Sstc extension)**<br>
+16550 UART<br>
 M-mode, S-mode, U-mode trap handler
 ## Main purpose
 A highly documented UNIX-like operating system for RISC-V research purposes
