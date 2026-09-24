@@ -189,6 +189,56 @@ user_switch: # a0 = user pgtbl, a1 = user stack, a2 = user pc; modified: t0, t1,
     mv a7, zero
     sret # switch to user mode
 
+# ==============================================================================
+# User trapframe structure definition
+# Total size: 320 bytes (assuming 8 byte (uint64) alignment for 64-bit registers)
+# ==============================================================================
+# Offset  | Size (B) | Register / Field description
+# --------|----------|---------------------------------------------------------
+# 0       | 8        | x0  (zero)  - always 0, stored but not restored
+# 8       | 8        | x1  (ra)    - return address
+# 16      | 8        | x2  (sp)    - user/previous stack pointer
+# 24      | 8        | x3  (gp)    - global pointer
+# 32      | 8        | x4  (tp)    - thread pointer
+# 40      | 8        | x5  (t0)    - temporary 0
+# 48      | 8        | x6  (t1)    - temporary 1
+# 56      | 8        | x7  (t2)    - temporary 2
+# 64      | 8        | x8  (s0/fp) - saved register 0 / frame pointer
+# 72      | 8        | x9  (s1)    - saved register 1
+# 80      | 8        | x10 (a0)    - argument 0 / return value (stored last via sscratch)
+# 88      | 8        | x11 (a1)    - argument 1
+# 96      | 8        | x12 (a2)    - argument 2
+# 104     | 8        | x13 (a3)    - argument 3
+# 112     | 8        | x14 (a4)    - argument 4
+# 120     | 8        | x15 (a5)    - argument 5
+# 128     | 8        | x16 (a6)    - argument 6
+# 136     | 8        | x17 (a7)    - argument 7
+# 144     | 8        | x18 (s2)    - saved register 2
+# 152     | 8        | x19 (s3)    - saved register 3
+# 160     | 8        | x20 (s4)    - saved register 4
+# 168     | 8        | x21 (s5)    - saved register 5
+# 176     | 8        | x22 (s6)    - saved register 6
+# 184     | 8        | x23 (s7)    - saved register 7
+# 192     | 8        | x24 (s8)    - saved register 8
+# 200     | 8        | x25 (s9)    - saved register 9
+# 208     | 8        | x26 (s10)   - saved register 10
+# 216     | 8        | x27 (s11)   - saved register 11
+# 224     | 8        | x28 (t3)    - temporary 3
+# 232     | 8        | x29 (t4)    - temporary 4
+# 240     | 8        | x30 (t5)    - temporary 5
+# 248     | 8        | x31 (t6)    - temporary 6
+# --------|----------|---------------------------------------------------------
+# 256     | 8        | scause      - supervisor cause register
+# 264     | 8        | sstatus     - supervisor status register
+# 272     | 8        | sepc        - supervisor exception program counter
+# 280     | 8        | satp        - supervisor user/previous page table register
+# --------|----------|---------------------------------------------------------
+# 288     | 8        | kernel_satp - kernel page table root pointer (read-only, stored only when switching to user mode)
+# 296     | 8        | kernel_stvec- kernel supervisor trap vector (read-only, stored only when switching to user mode)
+# 304     | 8        | kernel_sp   - kernel stack pointer (read-only, stored only when switching to user mode)
+# --------|----------|---------------------------------------------------------
+# 312     | 8        | task_state  - address of task state structure (reserved for now)
+# ==============================================================================
 user_trapframe:
     .fill 320, 8, 0
 

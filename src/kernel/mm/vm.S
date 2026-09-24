@@ -134,7 +134,7 @@ vm_init: # no arguments; modified: t0, t1, t2, t3
     la a0, kernel_pagedir # kernel page directory address
     mksatp t0, a0, MMU_MODE_SV39 # create formatted SATP register
     csrw satp, t0 # install formatted SATP register
-    sfence.vma # clear TLB cache
+    sfence.vma # flush TLB cache
     pop a4 # restore original argument registers
     pop a3
     pop a2
