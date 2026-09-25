@@ -1,6 +1,7 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 .include "riscv.inc"
 .include "vm.inc"
-
 
 .section .trampoline
 .global utrap_vector

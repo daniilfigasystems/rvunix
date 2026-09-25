@@ -1,3 +1,12 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# rvunix RISC-V Research Operating System
+# Path: src/kernel/include/riscv.inc
+#
+# Description:
+# Pseudo-instruction macros and Processor related definitions
+#
+# Author: Daniil Dunaeff (dan7)
+
 # Definitions
 
 .set PAGE_SIZE, 4096 # RISC-V typical page size is 4k

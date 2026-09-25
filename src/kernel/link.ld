@@ -1,3 +1,14 @@
+/* 
+* SPDX-License-Identifier: GPL-3.0-or-later
+* rvunix RISC-V Research Operating System
+* Path: src/kernel/link.ld
+*
+* Description:
+* Linker script
+*
+* Author: Daniil Dunaeff (dan7)
+*/
+
 ENTRY(_kentry);
 
 SECTIONS

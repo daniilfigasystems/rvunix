@@ -1,3 +1,12 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# rvunix RISC-V Research Operating System
+# Path: src/kernel/utils/string.S
+#
+# Description:
+# String library
+#
+# Author: Daniil Dunaeff (dan7)
+
 .include "riscv.inc"
 
 .section .text

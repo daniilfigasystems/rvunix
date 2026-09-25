@@ -1,3 +1,12 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# rvunix RISC-V Research Operating System
+# Path: src/kernel/kern/init.S
+#
+# Description:
+# Kernel initialization
+#
+# Author: Daniil Dunaeff (dan7)
+
 .include "riscv.inc"
 .include "vm.inc"
 

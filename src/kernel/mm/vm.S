@@ -1,3 +1,12 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# rvunix RISC-V Research Operating System
+# Path: src/kernel/mm/vm.S
+#
+# Description:
+# Virtual memory manager
+#
+# Author: Daniil Dunaeff (dan7)
+
 .include "riscv.inc"
 .include "memlayout.inc"
 .include "vm.inc"

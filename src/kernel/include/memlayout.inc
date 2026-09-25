@@ -1,3 +1,12 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# rvunix RISC-V Research Operating System
+# Path: src/kernel/include/memlayout.inc
+#
+# Description:
+# Memory layout
+#
+# Author: Daniil Dunaeff (dan7)
+
 # Definitions
 
 .set MM_UART_IO, 0x10000000 # UART base address 

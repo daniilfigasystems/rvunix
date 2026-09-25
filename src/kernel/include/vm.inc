@@ -1,3 +1,12 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# rvunix RISC-V Research Operating System
+# Path: src/kernel/include/vm.inc
+#
+# Description:
+# Virtual memory specific defintions
+#
+# Author: Daniil Dunaeff (dan7)
+
 # Definitions
 
 # Virtual address to bits (sv39 profile)

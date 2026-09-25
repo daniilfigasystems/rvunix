@@ -3,7 +3,9 @@
 ![License](https://img.shields.io/badge/license-GPLv3-red.svg?style=flat-square)
 ![RISC-V](https://img.shields.io/badge/RISC-V-003262?style=flat-square&logo=riscv)
 
-**rvunix** is an UNIX-like operating system written entirely in **RISC-V assembly**. 
+## Project Overview
+
+**rvunix** is an UNIX-like operating system written entirely in **RISC-V assembly**.
 
 The main purpose of this project is to provide a highly documented, minimalistic UNIX-like operating system tailored for RISC-V research, academic study, and low-level development.
 
@@ -14,11 +16,13 @@ The main purpose of this project is to provide a highly documented, minimalistic
 * **Sv39 Virtual Memory:** Full support for Sv39 page-based virtual memory system.
 * **Memory Management:** Includes a basic memory allocator.
 * **Userspace:** Userspace support paired with basic system calls.
-* **RISC-V Timer:** Built-in timer support **(requires Sstc extension)**.
-* **Peripherals:** 16550 UART driver.
+* **RISC-V Timer:** Built-in RISC-V timer support **(requires Sstc extension)**.
+* **Peripherals:** Supports Standard 16550 UART.
 * **Privilege Modes:** Comprehensive trap handlers for M-mode, S-mode, and U-mode.
 
 ## Roadmap
+
+Entries with __bold__ text are currently being developed
 
 - [ ] Peripherals
     - [x] RISC-V Timer support
@@ -37,7 +41,7 @@ The main purpose of this project is to provide a highly documented, minimalistic
     - [ ] Sv48 Virtual memory
 - [ ] Userspace
     - [ ] Process management
-        - [ ] Process creation
+        - [ ] __Process creation__
         - [ ] Process handling
         - [ ] Scheduler
         - [ ] Executable loading
