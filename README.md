@@ -1,26 +1,60 @@
 # rvunix
-## rvunix is an UNIX-like operating system written in RISC-V assembly
+
+[![License: GPL v3](https://shields.io)](https://gnu.org)
+![Architecture: RISC-V](https://shields.io)
+
+**rvunix** is an UNIX-like operating system written entirely in **RISC-V assembly**. 
+
+The main purpose of this project is to provide a highly documented, minimalistic UNIX-like operating system tailored for RISC-V research, academic study, and low-level development.
+
+---
+
 ## Features
-Sv39 Virtual memory support<br>
-Basic memory allocator<br>
-Userspace and system calls<br>
-RISC-V Timer support **(requires Sstc extension)**<br>
-16550 UART<br>
-M-mode, S-mode, U-mode trap handler
-## Main purpose
-A highly documented UNIX-like operating system for RISC-V research purposes
+
+* **Sv39 Virtual Memory:** Full support for Sv39 page-based virtual memory system.
+* **Memory Management:** Includes a basic memory allocator.
+* **Process Isolation:** Userspace support paired with basic system calls.
+* **RISC-V Timer:** Built-in timer support **(requires Sstc extension)**.
+* **Peripherals:** 16550 UART driver.
+* **Privilege Modes:** Comprehensive trap handlers for M-mode, S-mode, and U-mode.
+
+---
+
 ## Compatibility
-### Currently supports:
-```
-QEMU VIRT board with rv64 processor
-```
-## Building and running
-__You must have: make, riscv64-linux-gnu-gcc, riscv64-linux-gnu-binutils, qemu-system-riscv64 installed on your system__<br>
-Compile kernel for QEMU VIRT board
-```
+
+Currently, the system supports:
+* **QEMU VIRT board** equipped with a **rv64** processor.
+
+---
+
+## Building and Running
+
+### Prerequisites
+
+You must have the following toolchain and emulators installed on your system:
+* `make`
+* `riscv64-linux-gnu-gcc`
+* `riscv64-linux-gnu-binutils`
+* `qemu-system-riscv64`
+
+### 1. Compile the Kernel
+
+Compile the kernel specifically for the QEMU VIRT board by running:
+
+```bash
 make CROSS_PREFIX=riscv64-linux-gnu-
 ```
-Run kernel in QEMU
-```
+
+### 2. Run the Kernel in QEMU
+
+Launch the compiled kernel in the QEMU emulator with the following command:
+
+```bash
 qemu-system-riscv64 -M virt -bios build/rvkrnl.bin -nographic
 ```
+
+---
+
+## License
+
+This project is licensed under the GNU General Public License v3.0 - see the LICENSE file for details.
