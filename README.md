@@ -44,6 +44,17 @@ The main purpose of this project is to provide a highly documented, minimalistic
         - [ ] File descriptors
         - [ ] Process isolation
         - [ ] Shared memory
+    - [ ] System calls
+        - [ ] Exit
+        - [ ] Open
+        - [ ] Close
+        - [ ] Read
+        - [ ] Write
+        - [ ] Seek
+        - [ ] Brk
+        - [ ] Pipe
+        - [ ] Fork
+        - [ ] Exec
     - [ ] Userspace programs
         - [ ] coreutils
         - [ ] libc
