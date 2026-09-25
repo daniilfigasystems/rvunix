@@ -13,10 +13,41 @@ The main purpose of this project is to provide a highly documented, minimalistic
 
 * **Sv39 Virtual Memory:** Full support for Sv39 page-based virtual memory system.
 * **Memory Management:** Includes a basic memory allocator.
-* **Process Isolation:** Userspace support paired with basic system calls.
+* **Userspace:** Userspace support paired with basic system calls.
 * **RISC-V Timer:** Built-in timer support **(requires Sstc extension)**.
 * **Peripherals:** 16550 UART driver.
 * **Privilege Modes:** Comprehensive trap handlers for M-mode, S-mode, and U-mode.
+
+## Roadmap
+
+- [ ] Peripherals
+    - [x] RISC-V Timer support
+    - [x] 16550 UART support
+    - [ ] Interrupt controller support
+    - [ ] Virtio-blk support
+    - [ ] DMA support
+- [x] Trap handlers
+    - [x] M-mode trap handler
+    - [x] S-mode trap handler
+    - [x] U-mode trap handler
+- [ ] Memory management
+    - [x] Physical memory manager
+    - [ ] Advanced physical memory manager
+    - [x] Sv39 Virtual memory
+    - [ ] Sv48 Virtual memory
+- [ ] Userspace
+    - [ ] Process management
+        - [ ] Process creation
+        - [ ] Process handling
+        - [ ] Scheduler
+        - [ ] Executable loading
+        - [ ] File descriptors
+        - [ ] Process isolation
+        - [ ] Shared memory
+    - [ ] Userspace programs
+        - [ ] coreutils
+        - [ ] libc
+        - [ ] sh
 
 ---
 
