@@ -1,4 +1,11 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+# rvunix RISC-V Research Operating System
+# Path: src/kernel/cpu/timer.S
+#
+# Description:
+# Processor integrated timer driver
+#
+# Author: Daniil Dunaeff (dan7)
 
 .include "riscv.inc"
 .include "timer.inc"
@@ -39,13 +46,14 @@ _timer_wait_end:
 # Initialize RISC-V timer
 timer_init: # a0 = freq; modified: t0
     svra # save return address
+    push a0 # save original argument
     la t0, timer_freq
     sd a0, 0(t0) # store timer frequency for future adjusting
-    li t0, TIMER_IRQ_MASK # bit 5 of SIE is RISC-V timer interrupt bit
-    csrs sie, t0 # enable timer interrupt
-    csrr t0, time # read timer register
+    li a0, TIMER_IRQ_BIT # IRQ 5 is RISC-V timer interrupt
+    call cpu_enable_irq # enable timer interrupt
     add t0, t0, a0 # adjust timer compare for next interrupt
     csrw stimecmp, t0 # write calculated timer counter value
+    pop a0 # restore original argument
     ldra # restore return address
     ret
 
