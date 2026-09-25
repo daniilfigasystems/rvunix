@@ -1,7 +1,7 @@
 # rvunix
 
 ![License](https://img.shields.io/badge/license-GPLv3-red.svg?style=flat-square)
-![RISC-V](https://img.shields.io/badge/RISC-V-ffd800?style=flat-square&logo=riscv)
+![RISC-V](https://img.shields.io/badge/RISC-V-003262?style=flat-square&logo=riscv)
 
 **rvunix** is an UNIX-like operating system written entirely in **RISC-V assembly**. 
 
