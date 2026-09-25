@@ -9,6 +9,7 @@
 
 .include "riscv.inc"
 .include "syscall.inc"
+.include "errno.inc"
 
 .section .text
 .global user_syscall_handler
@@ -27,10 +28,12 @@ _user_syscall_handler_end:
     ldra # restore return address
     ret
 _user_syscall_handler_unknown_sys:
-    j _user_syscall_handler_end # do not handle it currently
+    li t0, -ENOSYS # load ENOSYS immediate
+    sd t0, 80(a0) # set return value to ENOSYS (function not implemented)
+    j _user_syscall_handler_end # jump to end
 
 .section .rodata
 
 user_syscall_table:
-    .quad 0x0000000000000000
+    .quad 0x0000000000000000 # stub system call, not used
     .quad sys_exit
