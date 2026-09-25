@@ -32,7 +32,7 @@ The main purpose of this project is to provide a highly documented, minimalistic
     - [x] U-mode trap handler
 - [ ] Memory management
     - [x] Physical memory manager
-    - [ ] Advanced physical memory manager
+    - [ ] Heap manager
     - [x] Sv39 Virtual memory
     - [ ] Sv48 Virtual memory
 - [ ] Userspace
