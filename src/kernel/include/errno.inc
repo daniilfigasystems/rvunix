@@ -12,4 +12,5 @@
 .set EPERM, 1 # no permissions
 .set ENOENT, 2 # no entry
 .set EINTR, 4 # interrupted system call
+.set EAGAIN, 35 # resource temprorarily unavailable
 .set ENOSYS, 38 # function not implemented
