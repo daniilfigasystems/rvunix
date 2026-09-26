@@ -39,15 +39,15 @@ Entries with __bold__ text are currently being developed
     - [ ] Heap manager
     - [x] Sv39 Virtual memory
     - [ ] Sv48 Virtual memory
-- [ ] __Userspace__
-    - [ ] __Process management__
-        - [ ] __Process creation__
-        - [ ] Process handling
-        - [ ] Scheduler
-        - [ ] Executable loading
-        - [ ] File descriptors
-        - [ ] Process isolation
-        - [ ] Shared memory
+- [ ] __Process management__
+    - [ ] __Process creation__
+    - [ ] Process handling
+    - [ ] Scheduler
+    - [ ] Executable loading
+    - [ ] File descriptors
+    - [ ] Process isolation
+    - [ ] Shared memory
+- [ ] Userspace
     - [ ] System calls
         - [ ] Exit
         - [ ] Open
