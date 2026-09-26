@@ -19,6 +19,7 @@ OBJECTS := $(BUILD_DIR)/uart.$(OBJ) \
 			$(BUILD_DIR)/cpu.$(OBJ) \
 			$(BUILD_DIR)/timer.$(OBJ) \
 			$(BUILD_DIR)/user.$(OBJ) \
+			$(BUILD_DIR)/proc.$(OBJ) \
 			$(BUILD_DIR)/syscall.$(OBJ) \
 			$(BUILD_DIR)/sysproc.$(OBJ)
 CFLAGS := -ffreestanding -nostdlib -nostdinc -mcmodel=medany -O3 -g3
@@ -56,6 +57,8 @@ $(BUILD_DIR)/cpu.$(OBJ): $(SRC_DIR)/kernel/cpu/cpu.S
 $(BUILD_DIR)/timer.$(OBJ): $(SRC_DIR)/kernel/cpu/timer.S
 	$(AS) -I $(INC_DIR) $(ASFLAGS) $^ -o $@
 $(BUILD_DIR)/user.$(OBJ): $(SRC_DIR)/kernel/cpu/user.S
+	$(AS) -I $(INC_DIR) $(ASFLAGS) $^ -o $@
+$(BUILD_DIR)/proc.$(OBJ): $(SRC_DIR)/kernel/kern/proc.S
 	$(AS) -I $(INC_DIR) $(ASFLAGS) $^ -o $@
 $(BUILD_DIR)/syscall.$(OBJ): $(SRC_DIR)/kernel/kern/syscall.S
 	$(AS) -I $(INC_DIR) $(ASFLAGS) $^ -o $@
