@@ -1,4 +1,11 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+# rvunix RISC-V Research Operating System
+# Path: src/kernel/boot/trap.S
+#
+# Description:
+# M-mode trap handler, trap initialization
+#
+# Author: Daniil Dunaeff (dan7)
 
 .include "riscv.inc"
 
