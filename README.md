@@ -39,8 +39,8 @@ Entries with __bold__ text are currently being developed
     - [ ] Heap manager
     - [x] Sv39 Virtual memory
     - [ ] Sv48 Virtual memory
-- [ ] Userspace
-    - [ ] Process management
+- [ ] __Userspace__
+    - [ ] __Process management__
         - [ ] __Process creation__
         - [ ] Process handling
         - [ ] Scheduler
@@ -98,6 +98,12 @@ Launch the compiled kernel in the QEMU emulator with the following command:
 ```bash
 qemu-system-riscv64 -M virt -bios build/rvkrnl.bin -nographic
 ```
+
+---
+
+## Contributing
+
+Contributions, bug reports, and feature requests are welcome! Feel free to open an issue or submit a pull request if you are interested in helping build out the roadmap features.
 
 ---
 
