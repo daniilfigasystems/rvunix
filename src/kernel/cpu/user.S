@@ -250,7 +250,7 @@ user_switch: # a0 = user pgtbl, a1 = user stack, a2 = user pc; modified: t0, t1,
 # 296     | 8        | kernel_stvec- kernel supervisor trap vector (read-only, stored only when switching to user mode)
 # 304     | 8        | kernel_sp   - kernel stack pointer (read-only, stored only when switching to user mode)
 # --------|----------|---------------------------------------------------------
-# 312     | 8        | task_state  - address of task state structure (reserved for now)
+# 312     | 8        | proc        - address of process structure (reserved for now)
 # ==============================================================================
 user_trapframe:
     .fill 320, 8, 0

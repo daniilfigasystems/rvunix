@@ -5,9 +5,9 @@
 
 ## Project Overview
 
-**rvunix** is an UNIX-like operating system written entirely in **RISC-V assembly**.
+**rvunix** is an UNIX-like microkernel operating system written entirely in **RISC-V assembly**.
 
-The main purpose of this project is to provide a highly documented, minimalistic UNIX-like operating system tailored for RISC-V research, academic study, and low-level development.
+The main purpose of this project is to provide a highly documented, minimalistic UNIX-like microkernel operating system tailored for RISC-V research, academic study, and low-level development.
 
 ---
 
@@ -19,6 +19,7 @@ The main purpose of this project is to provide a highly documented, minimalistic
 * **RISC-V Timer:** Built-in RISC-V timer support **(requires Sstc extension)**.
 * **Peripherals:** Supports Standard 16550 UART.
 * **Privilege Modes:** Comprehensive trap handlers for M-mode, S-mode, and U-mode.
+* **Microkernel Design:** A microkernel architecture built for fast and secure execution.
 
 ## Roadmap
 
