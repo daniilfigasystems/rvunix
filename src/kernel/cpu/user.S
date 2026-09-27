@@ -128,7 +128,7 @@ _utrap_handler_exception:
 _utrap_handler_uecall:
     call user_syscall_handler # call system call handler to handle system call
     ld t0, 272(a0) # read supervisor exception program counter
-    addi t0, t0, 4 # adjust supervisor exception program counter to next instruction
+    addi t0, t0, 4 # adjust supervisor exception program counter to next instruction (don't use nextinst macro because ecall is fixed size)
     sd t0, 272(a0) # write modified supervisor exception program counter back
     j _utrap_handler_end
 _utrap_handler_end:

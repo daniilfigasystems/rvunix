@@ -14,38 +14,62 @@
 .include "errno.inc"
 
 .section .text
-.global proc_palloc
-.global proc_create
+.global proc_pid_allocate
+.global proc_get_process
+.global proc_create_process
 .global proc_init
 
 # Allocate process identifier
-proc_palloc: # no arguments; modified: t0, t1, a0 (returns allocated process identifier or an error)
+proc_pid_allocate: # no arguments; modified: t0, t1, a0 (returns allocated process identifier or an error)
     svra # save return address
     la t0, last_pid # load last process identifier address
     ld a0, 0(t0) # load last process identifier value from last process identifier
     li t1, MAX_PROC # load max process count immediate
-    bge a0, t1, _proc_alloc_err # if we hit process identifier count limit, return an error
+    bge a0, t1, _proc_pid_allocate_err # if we hit process identifier count limit, return an error
     inc a0 # increment last process identifier
     sd a0, 0(t0) # store modified last process identifier
-_proc_palloc_end:
+_proc_pid_allocate_end:
     ldra # restore return address
     ret
-_proc_palloc_err:
+_proc_pid_allocate_err:
     li a0, -EAGAIN # return EAGAIN error code
-    j _proc_alloc_end # jump to end
+    j _proc_pid_allocate_end # jump to end
+
+# Get process structure from process identifier
+proc_get_process: # a0 = pid; modified: t0, t1, a0 (returns address of process structure here)
+    svra # save return address
+    la t0, procs # load address of array of process structures
+    li t1, 118 # process structure size
+    mul t1, a0, t1 # multiply process identifier by process structure size to get process structure start
+    add a0, t0, t1 # add base of process structures and offset to calculated processs structure
+    ldra # restore return address
+    ret
 
 # Create new process
-proc_create: # no arguments; modified: t0, t1, t2, a0 (returns process structure here)
+proc_create_process: # no arguments; modified: t0, t1, t2, a0 (returns process structure here)
     svra # save return address
-    call proc_palloc # allocate process identifier for new process
-    bltz a0, _proc_create_err # if function returned an error, return an error
-    # TODO
-_proc_create_end:
+    push a1 # save original argument registers
+    push a2
+    push a3
+    call proc_pid_allocate # allocate process identifier for new process
+    bltz a0, _proc_create_process_err # if function returned an error, return an error
+    push a0 # save process identifier for future use
+    call proc_get_process # get address of process structure
+    bltz a0, _proc_create_process_err # if function returned an error, return an error
+    # TODO: zero out process structure
+    li t0, PSTATE_USED # load used process state immediate
+    sd t0, 8(a0) # mark process as used
+    pop t0 # restore process identifier
+    sd t0, 40(a0) # assign process identifier
+_proc_create_process_end:
+    pop a3 # restore original argument registers
+    pop a2
+    pop a1
     ldra # restore return address
     ret
-_proc_create_err:
+_proc_create_process_err:
     li a0, -EAGAIN # return EAGAIN error code
-    j _proc_create_end # jump to end
+    j _proc_create_process_end # jump to end
 
 # Initialize process manager
 proc_init: # no arguments; modified: t0, t1, t2, t3

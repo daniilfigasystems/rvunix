@@ -3,7 +3,7 @@
 # Path: src/kernel/include/syscall.inc
 #
 # Description:
-# System calls
+# System call numbers definition
 #
 # Author: Daniil Dunaeff (dan7)
 

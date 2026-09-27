@@ -11,7 +11,7 @@ OBJECTS := $(BUILD_DIR)/uart.$(OBJ) \
 			$(BUILD_DIR)/init.$(OBJ) \
 	 		$(BUILD_DIR)/boot.$(OBJ) \
 			$(BUILD_DIR)/mtrap.$(OBJ) \
-			$(BUILD_DIR)/kalloc.$(OBJ) \
+			$(BUILD_DIR)/pm.$(OBJ) \
 			$(BUILD_DIR)/string.$(OBJ) \
 			$(BUILD_DIR)/print.$(OBJ) \
 			$(BUILD_DIR)/vm.$(OBJ) \
@@ -40,7 +40,7 @@ $(BUILD_DIR)/init.$(OBJ): $(SRC_DIR)/kernel/kern/init.S
 	$(AS) -I $(INC_DIR) $(ASFLAGS) $^ -o $@
 $(BUILD_DIR)/boot.$(OBJ): $(SRC_DIR)/kernel/boot/boot.S
 	$(AS) -I $(INC_DIR) $(ASFLAGS) $^ -o $@
-$(BUILD_DIR)/kalloc.$(OBJ): $(SRC_DIR)/kernel/mm/kalloc.S
+$(BUILD_DIR)/pm.$(OBJ): $(SRC_DIR)/kernel/mm/pm.S
 	$(AS) -I $(INC_DIR) $(ASFLAGS) $^ -o $@
 $(BUILD_DIR)/string.$(OBJ): $(SRC_DIR)/kernel/utils/string.S
 	$(AS) -I $(INC_DIR) $(ASFLAGS) $^ -o $@

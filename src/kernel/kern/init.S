@@ -15,7 +15,7 @@
 .global kmain
 
 kmain:
-    call kalloc_init
+    call pm_init
     la a0, init_vm_msg
     call uart_writestring
     call vm_init
@@ -36,14 +36,14 @@ _kmain_loop:
     mv a2, a1
     li a3, PTE_KERNEL_TEXT
     li a4, 1
-    call map_pages
+    call vm_map_pages
     push a0
-    call kalloc
+    call pm_page_allocate
     mv a1, a0
     pop a0
     mv a2, a1
     li a3, PTE_USER_TEXT
-    call map_pages
+    call vm_map_pages
     push a0
     push a1
     push a2
