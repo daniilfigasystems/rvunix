@@ -24,6 +24,10 @@ The main purpose of this project is to provide a highly documented, minimalistic
 
 Entries with __bold__ text are currently being developed
 
+- [ ] Firmware
+    - [ ] Device tree support
+    - [ ] OpenSBI support
+    - [ ] U-Boot support
 - [ ] Peripherals
     - [x] RISC-V Timer support
     - [x] 16550 UART support
@@ -39,6 +43,7 @@ Entries with __bold__ text are currently being developed
     - [ ] Heap manager
     - [x] Sv39 Virtual memory
     - [ ] Sv48 Virtual memory
+    - [ ] Huge pages
 - [ ] __Process management__
     - [ ] __Process creation__
     - [ ] Process handling
@@ -47,6 +52,18 @@ Entries with __bold__ text are currently being developed
     - [ ] File descriptors
     - [ ] Process isolation
     - [ ] Shared memory
+- [ ] Virtualization
+    - [ ] Peripherals
+        - [ ] 16550 UART support
+        - [ ] Interrupt controller support
+        - [ ] Virtio-blk support
+        - [ ] DMA support
+    - [ ] Trap handlers
+        - [ ] VS-mode trap handler
+    - [ ] Virtual memory
+        - [ ] Sv39x4 Virtual memory
+        - [ ] Sv48x4 Virtual memory
+    - [ ] VU-mode
 - [ ] Userspace
     - [ ] System calls
         - [ ] Exit
