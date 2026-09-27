@@ -19,7 +19,6 @@ The main purpose of this project is to provide a highly documented, minimalistic
 * **RISC-V Timer:** Built-in RISC-V timer support **(requires Sstc extension)**.
 * **Peripherals:** Supports Standard 16550 UART.
 * **Privilege Modes:** Comprehensive trap handlers for M-mode, S-mode, and U-mode.
-* **RV-DOS™ Emulation:** Capable of running RV-DOS™ 32-bit native binaries through emulation
 
 ## Roadmap
 
@@ -53,6 +52,7 @@ Entries with __bold__ text are currently being developed
     - [ ] File descriptors
     - [ ] Process isolation
     - [ ] Shared memory
+    - [ ] RV-DOS™ 32-bit native binaries emulation
 - [ ] Virtualization
     - [ ] Peripherals
         - [ ] 16550 UART support
