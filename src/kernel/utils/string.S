@@ -72,19 +72,7 @@ _memmove_end:
 # Copy source size bytes to destination
 memcpy: # a0 = dest, a1 = src, a2 = size; modified: t0
     svra # save return address
-    push a0 # save original argument registers
-    li t0, 0
-_memcpy_loop:
-    push t0 # save temporary register to reduce registers use
-    lb t0, 0(a1) # load value from source address
-    sb t0, 0(a0) # store value to destination address
-    pop t0 # restore temporary register
-    inc a0 # increment destination address
-    inc a1 # increment source address
-    inc t0 # increment counter
-    bne t0, a2, _memcpy_loop # loop until counter is equal to size
-_memcpy_end:
-    pop a0 # restore original argument registers
+    call memmove # call memmove (same function as memcpy but with different name)
     ldra # restore return address
     ret
 

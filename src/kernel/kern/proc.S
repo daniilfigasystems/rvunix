@@ -50,20 +50,20 @@ proc_create_process: # no arguments; modified: t0, t1, t2, a0 (returns process s
     svra # save return address
     push a1 # save original argument registers
     push a2
-    push a3
     call proc_pid_allocate # allocate process identifier for new process
     bltz a0, _proc_create_process_err # if function returned an error, return an error
     push a0 # save process identifier for future use
     call proc_get_process # get address of process structure
     bltz a0, _proc_create_process_err # if function returned an error, return an error
-    # TODO: zero out process structure
+    li a1, 0 # fill process structure with zeros
+    li a2, 118 # size of the process structure
+    call memset # zero out process structure
     li t0, PSTATE_USED # load used process state immediate
     sd t0, 8(a0) # mark process as used
     pop t0 # restore process identifier
     sd t0, 40(a0) # assign process identifier
 _proc_create_process_end:
-    pop a3 # restore original argument registers
-    pop a2
+    pop a2 # restore original argument registers
     pop a1
     ldra # restore return address
     ret
