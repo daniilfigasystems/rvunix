@@ -32,14 +32,14 @@ _proc_pid_allocate_end:
     ldra # restore return address
     ret
 _proc_pid_allocate_err:
-    li a0, -EAGAIN # return EAGAIN error code
+    li a0, -EAGAIN # return EAGAIN error (resource temporarily unavailable)
     j _proc_pid_allocate_end # jump to end
 
 # Get process structure from process identifier
 proc_get_process: # a0 = pid; modified: t0, t1, a0 (returns address of process structure here)
     svra # save return address
     la t0, procs # load address of array of process structures
-    li t1, 118 # process structure size
+    li t1, 120 # process structure size
     mul t1, a0, t1 # multiply process identifier by process structure size to get process structure start
     add a0, t0, t1 # add base of process structures and offset to calculated processs structure
     ldra # restore return address
@@ -57,43 +57,52 @@ proc_create_process: # a0 = parent, a1 = name; modified: t0, t1, t2, a0 (returns
     call proc_get_process # get address of process structure
     bltz a0, _proc_create_process_err # if function returned an error, return an error
     li a1, 0 # fill process structure with zeros
-    li a2, 118 # size of the process structure
+    li a2, 120 # size of the process structure
     call memset # zero out process structure
     li t0, PSTATE_USED # load used process state immediate
     sd t0, 8(a0) # mark process as used
     pop t0 # restore process identifier
-    li t1, 320 # trapframe size
-    mul t1, t0, t1 # multiply process identifier by trapframe size to get offset to process context structure
-    la t2, ctxs # load address of array of context structures
-    add t2, t2, t1 # add base of context structures and offset to calculated context structure
+    li t1, 320 # process context size
+    mul t1, t0, t1 # multiply process identifier by process context size to get offset to process context structure
+    la t2, ctxs # load address of array of process context structures
+    add t2, t2, t1 # add base of process context structures and offset to calculated process context structure
     sd t2, 0(a0) # store address of process context
     sd t0, 40(a0) # assign process identifier
     pop t0 # restore address of parent process structure
     sd t0, 48(a0) # assign parent process
-    sd a2, 102(a0) # assign process name
+    sd a2, 104(a0) # assign process name
 _proc_create_process_end:
     pop a2 # restore original argument registers
     pop a1
     ldra # restore return address
     ret
 _proc_create_process_err:
-    li a0, -EAGAIN # return EAGAIN error code
+    li a0, -EAGAIN # return EAGAIN error (resource temporarily unavailable)
     j _proc_create_process_end # jump to end
 
 # Create scheduler process
 proc_create_sched_process: # no arguments: modified: t0, t1
     svra # save return address
     push a0 # save original argument register
+    push a1
+    li a0, 0 # no parent
+    la a1, proc_sched_name # sched process name
     call proc_create_process # create new process
+
 
 # Initialize process manager
 proc_init: # no arguments; modified: t0, t1, t2, t3
 # TODO
 
+.section .rodata
+
+proc_sched_name:
+    .asciz "sched"
+
 .section .bss
 
 # ==============================================================================
-# User trapframe structure definition
+# Process context (user trapframe) structure definition
 # Total size: 320 bytes (assuming 8 byte (uint64) alignment for 64-bit registers)
 # ==============================================================================
 # Offset  | Size (B) | Register / Field description
@@ -164,11 +173,11 @@ ctxs:
 # 80      | 8        | kctx        - address of kernel context structure
 # 88      | 8        | ofile       - address of array containing addresses of opened file structures
 # 96      | 8        | cwd         - current directory
-# 102     | 8        | name        - address of process name string
-# 110     | 8        | mode        - current mode of process (0 for native, 1 for rvdos emulation) (reserved for now)
+# 104     | 8        | name        - address of process name string
+# 112     | 8        | mode        - current mode of process (0 for native, 1 for rvdos emulation) (reserved for now)
 # ==============================================================================
 procs:
-    .fill 118 * MAX_PROC, 1, 0
+    .fill 120 * MAX_PROC, 1, 0
 
 last_pid:
     .quad 0x0000000000000000 # last process identifier
