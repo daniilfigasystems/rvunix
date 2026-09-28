@@ -26,8 +26,10 @@ proc_pid_allocate: # no arguments; modified: t0, t1, a0 (returns allocated proce
     ld a0, 0(t0) # load last process identifier value from last process identifier
     li t1, MAX_PROC # load max process count immediate
     bge a0, t1, _proc_pid_allocate_err # if we hit process identifier count limit, return an error
+    push a0 # save original last process identifier    
     inc a0 # increment last process identifier
     sd a0, 0(t0) # store modified last process identifier
+    pop a0 # restore original last process identifier
 _proc_pid_allocate_end:
     ldra # restore return address
     ret
@@ -57,7 +59,7 @@ proc_create_process: # a0 = parent, a1 = name; modified: t0, t1, t2, a0 (returns
     call proc_get_process # get address of process structure
     bltz a0, _proc_create_process_err # if function returned an error, return an error
     li a1, 0 # fill process structure with zeros
-    li a2, 120 # size of the process structure
+    li a2, 120 # process structure size
     call memset # zero out process structure
     li t0, PSTATE_USED # load used process state immediate
     sd t0, 8(a0) # mark process as used
@@ -67,7 +69,11 @@ proc_create_process: # a0 = parent, a1 = name; modified: t0, t1, t2, a0 (returns
     la t2, ctxs # load address of array of process context structures
     add t2, t2, t1 # add base of process context structures and offset to calculated process context structure
     sd t2, 0(a0) # store address of process context
-    sd t0, 40(a0) # assign process identifier
+    li t1, 256 # kernel thread context size
+    mul t1, t0, t1 # multiply process identifier by kernel thread context size to get offset to kernel thread context structure
+    la t2, kctxs # load address of array of kernel thread context structures
+    add t2, t2, t1 # add base of kernel thread context structures and offset to calculated kernel thread context structure
+    sd t2, 80(a0) # store address of kernel thread context
     pop t0 # restore address of parent process structure
     sd t0, 48(a0) # assign parent process
     sd a2, 104(a0) # assign process name
@@ -88,7 +94,11 @@ proc_create_sched_process: # no arguments: modified: t0, t1
     li a0, 0 # no parent
     la a1, proc_sched_name # sched process name
     call proc_create_process # create new process
-
+_proc_create_sched_process_end:
+    pop a1 # restore original argument registers
+    pop a0
+    ldra # restore return address
+    ret
 
 # Initialize process manager
 proc_init: # no arguments; modified: t0, t1, t2, t3
@@ -100,6 +110,48 @@ proc_sched_name:
     .asciz "sched"
 
 .section .bss
+
+# ==============================================================================
+# Kernel thread context (kctx) structure definition
+# Total size: 256 bytes (assuming 8 byte (uint64) alignment for 64-bit registers)
+# ==============================================================================
+# Offset  | Size (B) | Register / Field description
+# --------|----------|---------------------------------------------------------
+# 0       | 8        | x0  (zero)  - always 0, stored but not restored
+# 8       | 8        | x1  (ra)    - return address
+# 16      | 8        | x2  (sp)    - user/previous stack pointer
+# 24      | 8        | x3  (gp)    - global pointer
+# 32      | 8        | x4  (tp)    - thread pointer
+# 40      | 8        | x5  (t0)    - temporary 0
+# 48      | 8        | x6  (t1)    - temporary 1
+# 56      | 8        | x7  (t2)    - temporary 2
+# 64      | 8        | x8  (s0/fp) - saved register 0 / frame pointer
+# 72      | 8        | x9  (s1)    - saved register 1
+# 80      | 8        | x10 (a0)    - argument 0 / return value (stored last via sscratch)
+# 88      | 8        | x11 (a1)    - argument 1
+# 96      | 8        | x12 (a2)    - argument 2
+# 104     | 8        | x13 (a3)    - argument 3
+# 112     | 8        | x14 (a4)    - argument 4
+# 120     | 8        | x15 (a5)    - argument 5
+# 128     | 8        | x16 (a6)    - argument 6
+# 136     | 8        | x17 (a7)    - argument 7
+# 144     | 8        | x18 (s2)    - saved register 2
+# 152     | 8        | x19 (s3)    - saved register 3
+# 160     | 8        | x20 (s4)    - saved register 4
+# 168     | 8        | x21 (s5)    - saved register 5
+# 176     | 8        | x22 (s6)    - saved register 6
+# 184     | 8        | x23 (s7)    - saved register 7
+# 192     | 8        | x24 (s8)    - saved register 8
+# 200     | 8        | x25 (s9)    - saved register 9
+# 208     | 8        | x26 (s10)   - saved register 10
+# 216     | 8        | x27 (s11)   - saved register 11
+# 224     | 8        | x28 (t3)    - temporary 3
+# 232     | 8        | x29 (t4)    - temporary 4
+# 240     | 8        | x30 (t5)    - temporary 5
+# 248     | 8        | x31 (t6)    - temporary 6
+# ==============================================================================
+kctxs:
+    .fill 256 * MAX_PROC, 1, 0
 
 # ==============================================================================
 # Process context (user trapframe) structure definition
