@@ -101,7 +101,7 @@ _vm_map_pages_loop:
     add a2, a2, t1
     dec a4 # decrement counter
     bnez a4, _vm_map_pages_loop # loop until last page
-_vm_mappages_end:
+_vm_map_pages_end:
     pop a4 # restore original argument registers
     pop a2
     pop a1

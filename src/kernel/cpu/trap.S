@@ -10,16 +10,14 @@
 .include "riscv.inc"
 
 .section .text
-.extern user_trapframe
 .global trap_init
+.global trap_vector
 .global trap_panic
 
 # Initialize traps
 trap_init: # no arguments; modified: t0, t1, stvec
     svra # save return address
-    la t0, trap_vector
-    la t1, user_trapframe
-    sd t0, 296(t1) # store kernel trap vector address to stackframe
+    la t0, trap_vector # trap vector address
     csrw stvec, t0 # install trap vector in stvec (supervisor trap vector)
     call cpu_enable_sirqs # enable supervisor interrupts
     ldra # restore return address

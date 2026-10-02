@@ -9,6 +9,7 @@
 
 .include "riscv.inc"
 .include "vm.inc"
+.include "memlayout.inc"
 
 .section .text
 .extern utrap_vector
@@ -31,29 +32,10 @@ _kmain_loop:
     call uart_writestring
     li a0, 75000
     call timer_wait
-    la a0, user_pagedir
-    la a1, _trampoline_start
-    mv a2, a1
-    li a3, PTE_KERNEL_TEXT
-    li a4, 1
-    call vm_map_pages
-    push a0
     call pm_page_allocate
-    mv a1, a0
-    pop a0
-    mv a2, a1
-    li a3, PTE_USER_TEXT
-    call vm_map_pages
-    push a0
-    push a1
-    push a2
-    mv a0, a1
-    la a1, init_user
-    li a2, 32
-    call memmove
-    pop a2
-    pop a1
-    pop a0
+    mv a2, a0
+    li a3, 4096
+    call proc_create_user_process
     call user_switch
     call cpu_halt
 

@@ -2,17 +2,18 @@
 
 .include "riscv.inc"
 .include "vm.inc"
+.include "memlayout.inc"
 
 .section .trampoline
+.extern trap_vector
 .global utrap_vector
-.global user_trapframe
 .global user_switch
 
 # Trap vector (user mode)
 utrap_vector: # no arguments; modified: t0, t1, sepc
     csrw sscratch, a0
 _utrap_vector_stackframe_create:
-    la a0, user_trapframe
+    li a0, MM_TRAPFRAME # trapframe address
     sd x0,  0(a0) # store x0-x31 registers in stackframe
     sd x1,  8(a0)
     sd x2,  16(a0)
@@ -60,11 +61,10 @@ _utrap_vector_stackframe_create:
 
     csrr t0, sscratch
     sd t0, 80(a0) # now we can store a0
-    csrw sscratch, a0
 
     call utrap_handler # call primary trap handler
 _utrap_vector_stackframe_restore:
-    csrr a0, sscratch
+    li a0, MM_TRAPFRAME # trapframe address
     ld t0,  280(a0)
     csrw satp, t0 # restore supervisor atp
     ld t0,  272(a0)
@@ -175,14 +175,16 @@ user_switch: # a0 = user pgtbl, a1 = user stack, a2 = user pc; modified: t0, t1,
     call cpu_disable_sirqs # disable irqs during transition to user mode
     la t0, utrap_vector # load user trap vector address
     csrw stvec, t0 # write user trap vector address to supervisor trap vector
-    la t0, user_trapframe # load user trapframe address
-    la t1, _sp_addr # load kernel stack pointer address
-    sd t1, 304(t0) # store kernel stack for future use
-    csrr t1, satp
-    sd t1, 288(t0) # store kernel atp for future use
+    csrr t2, satp # load original kernel supervisor atp
     mksatp a0, a0, MMU_MODE_SV39 # create Sv39 supervisor atp
     csrw satp, a0 # write supervisor atp
     sfence.vma # flush TLB entries
+    li t0, MM_TRAPFRAME # load user trapframe address
+    sd t2, 288(t0) # store kernel atp for future use
+    la t1, trap_vector # load address of kernel trap vector
+    sd t1, 296(t0) # store address of kernel trap vector for future use
+    la t1, _sp_addr # load kernel stack pointer address
+    sd t1, 304(t0) # store kernel stack for future use
     mv sp, a1 # switch to user stack
     csrw sepc, a2 # set return program counter to user starting address
     li t0, 0x100
@@ -252,8 +254,6 @@ user_switch: # a0 = user pgtbl, a1 = user stack, a2 = user pc; modified: t0, t1,
 # --------|----------|---------------------------------------------------------
 # 312     | 8        | proc        - address of process structure (reserved for now)
 # ==============================================================================
-user_trapframe:
-    .fill 320, 8, 0
 
 .section .bss
 

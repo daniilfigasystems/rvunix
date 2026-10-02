@@ -10,6 +10,7 @@
 .include "riscv.inc"
 .include "proc.inc"
 .include "vm.inc"
+.include "memlayout.inc"
 .include "limits.inc"
 .include "errno.inc"
 
@@ -17,6 +18,8 @@
 .global proc_pid_allocate
 .global proc_get_process
 .global proc_create_process
+.global proc_create_user_process
+.global proc_thread_switch
 .global proc_init
 
 # Allocate process identifier
@@ -64,11 +67,11 @@ proc_create_process: # a0 = parent, a1 = name; modified: t0, t1, t2, a0 (returns
     li t0, PSTATE_USED # load used process state immediate
     sd t0, 8(a0) # mark process as used
     pop t0 # restore process identifier
-    li t1, 320 # process context size
-    mul t1, t0, t1 # multiply process identifier by process context size to get offset to process context structure
-    la t2, ctxs # load address of array of process context structures
-    add t2, t2, t1 # add base of process context structures and offset to calculated process context structure
-    sd t2, 0(a0) # store address of process context
+    push a0 # save address of process structure for future use
+    call pm_page_allocate # allocate page for context
+    mv t1, a0 # transfer page address to temporary register
+    pop a0 # restore address of process structure
+    sd t1, 0(a0) # store address of process context
     li t1, 256 # kernel thread context size
     mul t1, t0, t1 # multiply process identifier by kernel thread context size to get offset to kernel thread context structure
     la t2, kctxs # load address of array of kernel thread context structures
@@ -77,6 +80,11 @@ proc_create_process: # a0 = parent, a1 = name; modified: t0, t1, t2, a0 (returns
     pop t0 # restore address of parent process structure
     sd t0, 48(a0) # assign parent process
     sd a2, 104(a0) # assign process name
+    push a0 # save address of process structure
+    call pm_page_allocate # allocate page for user page table
+    mv t0, a0 # transfer page address to temporary register
+    pop a0 # restore address of process structure
+    sd t0, 72(a0) # store user page table address
 _proc_create_process_end:
     pop a2 # restore original argument registers
     pop a1
@@ -87,9 +95,9 @@ _proc_create_process_err:
     j _proc_create_process_end # jump to end
 
 # Create scheduler process
-proc_create_sched_process: # no arguments: modified: t0, t1
+proc_create_sched_process: # no arguments; modified: t0, t1, t2
     svra # save return address
-    push a0 # save original argument register
+    push a0 # save original argument registers
     push a1
     li a0, 0 # no parent
     la a1, proc_sched_name # sched process name
@@ -100,9 +108,127 @@ _proc_create_sched_process_end:
     ldra # restore return address
     ret
 
+# Create user process
+proc_create_user_process: # a0 = parent, a1 = name, a2 = address of machine code (must be page aligned), a3 = size; modified: t0, t1, t2
+    svra # save return address
+    push a0 # save original argument registers
+    push a1
+    push a2
+    push a3
+    call proc_create_process # create process
+    ld t0, 72(a0) # load address of user page table
+    ld t1, 0(a0) # load address of user trapframe
+    # push a0 # save address of process structure
+    mv a0, t0 # transfer user page table address to first argument for vm_map_pages
+    mv a1, t1 # transfer user trapframe address to second argument for vm_map_pages
+    push a3 # save size of program for future use
+    push a2 # save address of machine code for future use
+    li a2, MM_TRAPFRAME # map user trapframe at high address
+    li a3, 1 # map one page
+    call vm_map_pages # map user trapframe
+    la a1, _trampoline_start # load address of trampoline section start
+    li a2, MM_TRAMPOLINE # map trampoline at high address
+    li a3, 1 # map one page
+    call vm_map_pages # map trampoline
+    pop a1 # restore address of machine code
+    li a2, 0x1000000 # default starting address of user program
+    pop a3 # restore size of program
+    call vm_map_size # map whole program
+    push a0 # save address of user page table for future use
+    call pm_page_allocate # allocate page for user stack
+    mv a1, a0 # transfer user stack address to second argument for vm_map_size
+    pop a0 # restore address of user page table
+    add a2, a2, a3 # calculate last address of program
+    li t0, 4096 # stack size
+    add a2, a2, t0 # calculate stack address
+    mv a3, t0 # transfer stack size to first argument for vm_map_size
+    call vm_map_size # map stack
+    li a3, 0x1000000 # entry point of the process
+    call user_switch # switch to user mode
+_proc_create_user_process_end:
+    pop a3 # restore original argument registers
+    pop a2
+    pop a1
+    pop a0
+    ldra # restore return address
+    ret
+
 # Initialize process manager
 proc_init: # no arguments; modified: t0, t1, t2, t3
-# TODO
+    svra # save return address
+    call proc_create_sched_process # create scheduler process
+    ldra # restore return address
+_proc_init_end:
+    ret
+
+# Switch kernel thread
+proc_thread_switch: # a0 = current_ctx, a1 = ctx; modified: t0, t1, t2
+    sd x0,  0(a0) # save x0-x31 registers
+    sd x1,  8(a0)
+    sd x2,  16(a0)
+    sd x3,  24(a0)
+    sd x4,  32(a0)
+    sd x5,  40(a0)
+    sd x6,  48(a0)
+    sd x7,  56(a0)
+    sd x8,  64(a0)
+    sd x9,  72(a0)
+    sd x10, 80(a0)
+    sd x11, 88(a0)
+    sd x12, 96(a0)
+    sd x13, 104(a0)
+    sd x14, 112(a0)
+    sd x15, 120(a0)
+    sd x16, 128(a0)
+    sd x17, 136(a0)
+    sd x18, 144(a0)
+    sd x19, 152(a0)
+    sd x20, 160(a0)
+    sd x21, 168(a0)
+    sd x22, 176(a0)
+    sd x23, 184(a0)
+    sd x24, 192(a0)
+    sd x25, 200(a0)
+    sd x26, 208(a0)
+    sd x27, 216(a0)
+    sd x28, 224(a0)
+    sd x29, 232(a0)
+    sd x30, 240(a0)
+    sd x31, 248(a0)
+    ld x31, 248(a1) # restore x0-x31 registers from context
+    ld x30, 240(a1)
+    ld x29, 232(a1)
+    ld x28, 224(a1)
+    ld x27, 216(a1)
+    ld x26, 208(a1)
+    ld x25, 200(a1)
+    ld x24, 192(a1)
+    ld x23, 184(a1)
+    ld x22, 176(a1)
+    ld x21, 168(a1)
+    ld x20, 160(a1)
+    ld x19, 152(a1)
+    ld x18, 144(a1)
+    ld x17, 136(a1)
+    ld x16, 128(a1)
+    ld x15, 120(a1)
+    ld x14, 112(a1)
+    ld x13, 104(a1)
+    ld x12, 96(a1)
+    ld x11, 88(a1)
+    ld x10, 80(a1)
+    ld x9,  72(a1)
+    ld x8,  64(a1)
+    ld x7,  56(a1)
+    ld x6,  48(a1)
+    ld x5,  40(a1)
+    ld x4,  32(a1)
+    ld x3,  24(a1)
+    ld x2,  16(a1)
+    ld x1,  8(a1)
+    # do not restore x0 because it is always zero
+_proc_thread_switch_end:
+    ret # must return from point where context was saved
 
 .section .rodata
 
@@ -203,8 +329,6 @@ kctxs:
 # --------|----------|---------------------------------------------------------
 # 312     | 8        | proc        - address of process structure (reserved for now)
 # ==============================================================================
-ctxs:
-    .fill 320 * MAX_PROC, 1, 0
 
 # ==============================================================================
 # Process structure definition
@@ -228,6 +352,7 @@ ctxs:
 # 104     | 8        | name        - address of process name string
 # 112     | 8        | mode        - current mode of process (0 for native, 1 for rvdos emulation) (reserved for now)
 # ==============================================================================
+sched_proc:
 procs:
     .fill 120 * MAX_PROC, 1, 0
 
