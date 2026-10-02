@@ -3,6 +3,9 @@
 ![License](https://img.shields.io/badge/license-GPLv3-red.svg?style=flat-square)
 ![RISC-V](https://img.shields.io/badge/RISC-V-003262?style=flat-square&logo=riscv)
 
+## NOTE
+**Currently i am taking break from development because of personal life problems and high complexity of the project. I would highly appreciate any contributions (especially process management).**
+
 ## Project Overview
 
 **rvunix** is an UNIX-like microkernel operating system written entirely in **RISC-V assembly**.

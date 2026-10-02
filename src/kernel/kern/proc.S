@@ -143,8 +143,6 @@ proc_create_user_process: # a0 = parent, a1 = name, a2 = address of machine code
     add a2, a2, t0 # calculate stack address
     mv a3, t0 # transfer stack size to first argument for vm_map_size
     call vm_map_size # map stack
-    li a3, 0x1000000 # entry point of the process
-    call user_switch # switch to user mode
 _proc_create_user_process_end:
     pop a3 # restore original argument registers
     pop a2

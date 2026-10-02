@@ -36,7 +36,6 @@ _kmain_loop:
     mv a2, a0
     li a3, 4096
     call proc_create_user_process
-    call user_switch
     call cpu_halt
 
 .section .data
